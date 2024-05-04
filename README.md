@@ -7,3 +7,19 @@ for accessing low level hardware. With the required hardware resources in mind, 
 - VSDSquadronMini Microcontroller
 - ESP8266 Microcontroller
 - Power and Connecting cables
+## Table for Pin Connection
+| VSDSquadron-Mini  | NodeMCU - ESP8266 |
+| ----------------- | ----------------- |
+| PD6               | TX                |
+| PD5               | RX                |
+| 3.3V              | 3.3V              |
+| GND               | GND               |
+
+## Pin Diagram
+![image](https://github.com/vishrutsm/vsdsquadron-mini-internship/assets/167020131/f8c6f3a1-f485-4b10-9265-567244838a5a)
+
+## Video Demonstration
+A snippet demonstrating controlling LED on VSDSquadron-Mini using MicroPython
+
+
+https://github.com/vishrutsm/vsdsquadron-mini-internship/assets/167020131/a519e72f-b789-4ff4-bb70-33d913f211de

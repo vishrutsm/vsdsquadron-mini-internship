@@ -35,7 +35,8 @@ The faults introduced into the components can be transient faults or persistent 
 ## Voltage Glitching on VSDSquadronMini
 If the power supply to the MCU is interrupted for a very short amount of time, the behaviour of the chip may be changed and possibly instructions skipped. If the power supply to the microcontroller is interrupted, the voltage regulator and capacitors ensure that a stable voltage is supplied and hence glitching will not be achieved. To counter this, we can implement the following method where the power supply is cut off by shorting capacitors present at the output of the voltage regulators:
 
-![voltage_glitching_concept](https://github.com/vishrutsm/vsdsquadron-mini-internship/assets/167020131/fc3cc46a-af03-4bcf-a167-871712eebc50)
+![voltage_glitching_concept](https://github.com/vishrutsm/vsdsquadron-mini-internship/assets/167020131/9d405898-113a-4c8d-9d73-948ffbb7aa4a)
+
 
 The Data Sheet for CH32V003F4U6 suggests that, under normal temperature, typically 300us is needed for reset. It can be inferred that power cut(grounding the capacitors) for 300us would cause the MCU to reset.
 
@@ -45,3 +46,8 @@ Hence, to achieve glitching for skipping instructions, grounding must be done fo
 However, to manage such precise timing conditions, switching can not be manual and has to be controlled by external hardware such as FPGAs or other microcontrollers. (Pins of ESP8299 can be controlled to perform under the required timing conditons. However, the GPIOs could not drive the capacitor to ground, leaving the timing condition yet to be addressed.)
 
 Here is a video demonstrating voltage glitching as per the above method but achieving only reset of the MCU as fault injection due to manual switching of ground:
+
+
+
+https://github.com/vishrutsm/vsdsquadron-mini-internship/assets/167020131/1454121b-3d8d-4c32-9e11-430ef504bf03
+

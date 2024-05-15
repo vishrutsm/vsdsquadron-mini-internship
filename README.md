@@ -18,6 +18,148 @@ for accessing low level hardware. With the required hardware resources in mind, 
 ## Pin Diagram
 ![image](https://github.com/vishrutsm/vsdsquadron-mini-internship/assets/167020131/f8c6f3a1-f485-4b10-9265-567244838a5a)
 
+## Programming the CH32V003F4U6 MCU on VSDSquadron-Mini
+The following C code is built and flashed into VSDSquadron-Mini board using [MounRiver Studio](http://www.mounriver.com/) software.
+    
+   
+```c  
+    #include "debug.h"
+    u8 Rxfinish1 = 0;
+    u8 RxBuffer1[3] = {0};
+    
+    void GPIO_Config(void)
+    {
+    GPIO_InitTypeDef GPIO_InitStructure = {0}; //structure variable used for the GPIO configuration
+    
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE); // to Enable the clock for Port D
+    
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0; // Defines which Pin to configure
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP; // Defines Output Type
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz; // Defines speed
+    GPIO_Init(GPIOD, &GPIO_InitStructure);
+    
+    }
+    
+    void USARTx_CFG(void)
+    {
+        GPIO_InitTypeDef  GPIO_InitStructure = {0};
+            USART_InitTypeDef USART_InitStructure = {0};
+            NVIC_InitTypeDef  NVIC_InitStructure = {0};
+
+        RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD | RCC_APB2Periph_USART1, ENABLE);
+
+        /* USART1 TX-->D.5   RX-->D.6 */
+        GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
+        GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+        GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+        GPIO_Init(GPIOD, &GPIO_InitStructure);
+
+        GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
+        GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+        GPIO_Init(GPIOD, &GPIO_InitStructure);
+
+        USART_InitStructure.USART_BaudRate = 115200;
+        USART_InitStructure.USART_WordLength = USART_WordLength_8b;
+        USART_InitStructure.USART_StopBits = USART_StopBits_1;
+        USART_InitStructure.USART_Parity = USART_Parity_No;
+        USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+        USART_InitStructure.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;
+
+        USART_Init(USART1, &USART_InitStructure);
+        USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
+
+        NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;
+        NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+        NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
+        NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+        NVIC_Init(&NVIC_InitStructure);;
+
+        USART_Cmd(USART1, ENABLE);
+    }
+    
+    void UartBufferSend(uint8_t* buffer, uint16_t length)
+    {
+        uint16_t tmp = 0;
+        for(tmp =0; tmp < length; tmp++)
+        {
+            while(USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET) /* waiting for sending finish */
+            {
+            }
+            USART_SendData(USART1, buffer[tmp]);
+        }
+    
+    }
+
+    void USART1_IRQHandler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
+    
+    void USART1_IRQHandler(void)
+    {
+        u8 RxCnt1 = 0;
+
+    if(USART_GetITStatus(USART1, USART_IT_RXNE) != RESET)
+    {
+        RxBuffer1[RxCnt1++] = USART_ReceiveData(USART1);
+
+        if(RxCnt1 >= 3)
+        {
+            RxCnt1 = 0;
+            Rxfinish1 = 1;
+        }
+    }
+    }
+    
+    int main(void)
+    {
+        NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
+        SystemCoreClockUpdate();
+        Delay_Init();
+
+    GPIO_Config();
+    USARTx_CFG();
+    Delay_Ms(1000);
+
+    GPIO_WriteBit(GPIOD, GPIO_Pin_0, Bit_RESET);
+    Delay_Ms(500);
+    GPIO_WriteBit(GPIOD, GPIO_Pin_0, Bit_SET);
+    Delay_Ms(500);
+    GPIO_WriteBit(GPIOD, GPIO_Pin_0, Bit_RESET);
+    Delay_Ms(500);
+    GPIO_WriteBit(GPIOD, GPIO_Pin_0, Bit_SET);
+    Delay_Ms(500);
+    GPIO_WriteBit(GPIOD, GPIO_Pin_0, Bit_RESET);
+    Delay_Ms(500);
+    GPIO_WriteBit(GPIOD, GPIO_Pin_0, Bit_SET);
+
+
+    while(1)
+    {
+        if(Rxfinish1)
+        {
+
+            if ((RxBuffer1[0] == 0x6f) && (RxBuffer1[1] == 0x66) && (RxBuffer1[2] == 0x66))
+            {
+                GPIO_WriteBit(GPIOD, GPIO_Pin_0, Bit_RESET);
+                UartBufferSend("DONE\r\n", 6);
+            }
+            else if ((RxBuffer1[0] == 0x6f) && (RxBuffer1[1] == 0x66) && (RxBuffer1[2] == 0x66))
+            {
+                GPIO_WriteBit(GPIOD, GPIO_Pin_0, Bit_SET);
+                UartBufferSend("DONE\r\n", 6);
+            }
+            else {
+                UartBufferSend("FAIL\r\n", 6);
+            }
+
+            Rxfinish1 = 0;
+        }
+        else {
+            USART1_IRQHandler();
+        }
+    }
+    }
+```
+    
+
 ## Video Demonstration
 A snippet demonstrating controlling LED on VSDSquadron-Mini using MicroPython
 

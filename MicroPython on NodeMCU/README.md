@@ -26,5 +26,4 @@ Alternatively, Thonny can be used to Flash the board and write Python codes in t
 A snippet of implementation of MicroPython on NodeMCU can be seen in the video:
 
 
-https://github.com/vishrutsm/vsdsquadron-mini-internship/assets/167020131/270e3105-5fc7-4b41-be06-03c43e656ff2
-
+https://github.com/vishrutsm/vsdsquadron-mini-internship/assets/167020131/33ccd0bf-6e13-4850-9da0-587598374b22
